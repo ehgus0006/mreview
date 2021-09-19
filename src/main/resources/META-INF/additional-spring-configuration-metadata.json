@@ -1,0 +1,8 @@
+{
+  "properties": [
+    {
+      "name": "org.zerock.upload.path",
+      "type": "java.lang.String",
+      "description": "Description for org.zerock.upload.path."
+  }
+] }
