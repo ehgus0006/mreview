@@ -1,11 +1,10 @@
 package org.zerock.mreview.service;
 
-import org.zerock.mreview.dto.MovieDTO;
-import org.zerock.mreview.dto.MovieImageDTO;
-import org.zerock.mreview.dto.PageRequestDTO;
-import org.zerock.mreview.dto.PageResultDTO;
+import org.zerock.mreview.dto.*;
+import org.zerock.mreview.entity.Member;
 import org.zerock.mreview.entity.Movie;
 import org.zerock.mreview.entity.MovieImage;
+import org.zerock.mreview.entity.Review;
 
 import java.util.HashMap;
 import java.util.List;
@@ -14,7 +13,11 @@ import java.util.stream.Collectors;
 
 public interface MovieService {
 
+
+
     Long register(MovieDTO movieDTO);
+
+    MovieDTO getMovie(Long mno);
 
     PageResultDTO<MovieDTO, Object[]> getList(PageRequestDTO requestDTO);
 
@@ -74,4 +77,6 @@ public interface MovieService {
         }
         return entityMap;
     }
+
+
 }
