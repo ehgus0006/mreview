@@ -49,16 +49,34 @@
 
         <div class="uploadResult">
             <ul>
-                <li th:each="movieImage : ${dto.imageDTOList}">
+                <li th:each="movieImage : ${dto.imageDTOList}" th:data-file="${movieImage.getThumbnailURL()}">
                     <img th:if="${movieImage.path != null}"
                          th:src="|/display?fileName=${movieImage.getThumbnailURL()}|">
                 </li>
             </ul>
         </div>
 
+        <div class="uploadResult2">
+
+        </div>
+
         <button type="button" class="btn btn-primary">Review Count
             <span class="badge badge-light">[[${dto.reviewCnt}]]</span>
         </button>
+
+        <button type="button" class="btn btn-info addReviewBtn">
+            Review Register
+        </button>
+
+
+        <a th:href="@{/movie/modify(mno = ${dto.mno}, page=${requestDTO.page})}">
+            <button type="button" class="btn btn-primary">Modify</button>
+        </a>
+
+
+        <div class="list-group reviewList">
+
+        </div>
 
         <script th:src="@{~/starrr.js}"></script>
         <link th:href="@{~/css/starrr.css}" rel="stylesheet">
@@ -122,18 +140,181 @@
             $(document).ready(function (e) {
 
                 var grade = 0;
+                // movie pk
                 var mno = [[${dto.mno}]];
+                // modal 창
+                var reviewModal = $('.reviewModal');
+                // member pk
+                var inputMid = $('input[name="mid"]');
+                // review text
+                var inputText = $('input[name="text"]');
+
+                // review pk
+                var reviewnum;
 
                 $('.starrr').starrr({
                     rating: grade,
-                    change: function (e, value){
+                    change: function (e, value) {
                         if (value) {
                             console.log(value);
                             grade = value;
                         }
                     }
                 });
-                $('.reviewModal').modal("show"); // 미리보기 용
+
+                // $('.reviewModal').modal("show"); // 미리보기 용
+
+
+
+                $('.addReviewBtn').click(function () {
+                    inputMid.val("");
+                    inputText.val("");
+
+                    $('.removeBtn , .modifyBtn ').hide();
+                    $('.reviewSaveBtn').show();
+
+                    reviewModal.modal('show');
+                });
+
+                $('.reviewSaveBtn').click(function () {
+                    var data = {mno:mno, grade:grade, text:inputText.val(), mid: inputMid.val()};
+
+                    console.log(data);
+
+                    $.ajax({
+                        url : '/reviews/' + mno,
+                        type : 'post',
+                        data: JSON.stringify(data),
+                        contentType : "application/json; charset=utf-8",
+                        dataType : "text",
+                        success: function (result){
+                            console.log("result =" + result);
+
+                            self.location.reload();
+                        }
+                    });
+                    reviewModal.modal("hide");
+                });
+
+                // 수정
+                $('.modifyBtn').on("click", function () {
+                    var data = {
+                        reviewnum : reviewnum,
+                        mno: mno,
+                        grade: grade,
+                        text: inputText.val(),
+                        mid: inputMid.val()
+                    };
+
+                    console.log("수정데이터" + data);
+                    //    @PutMapping("/{mno}/{reviewnum}")
+                    $.ajax({
+                        url: '/reviews/'+mno + '/'+ reviewnum,
+                        type: 'put',
+                        data: JSON.stringify(data),
+                        contentType: "application/json; charset=utf-8",
+                        dataType: 'text',
+                        success: function (result) {
+                            console.log("성공결과" + result);
+                            self.location.reload();
+                        }
+                    })
+                    reviewModal.modal('hide');
+                });
+
+                $('.removeBtn').on("click", function () {
+                    var data = {reviewnum: reviewnum};
+
+                    console.log(data);
+
+                    //    @DeleteMapping("/{mno}/{reviewnum}")
+                    $.ajax({
+                        url: '/reviews/' + mno + '/' + reviewnum,
+                        type: 'delete',
+                        contentType : 'application/json; charset=utf-8',
+                        dataType : 'text',
+                        success: function (result) {
+                            console.log("result:" + result);
+                            self.location.reload();
+                        }
+                    })
+                    reviewModal.modal("hide");
+                });
+
+                // 페이지가 열리면 바로 리뷰 데이터들을 가져와서 사용한다.
+                function getMovieReviews() {
+
+                    function formatTime(str) {
+                        var date = new Date(str);
+
+                        return date.getFullYear() + '/' +
+                            (date.getMonth() + 1) + '/' +
+                            date.getDate() + '' +
+                            date.getHours() + ':' +
+                            date.getMinutes();
+                    }
+
+                    $.getJSON("/reviews/" + mno + "/all", function (arr) {
+                        var str = "";
+
+                        $.each(arr, function (idx, review) {
+                            console.log(review);
+
+                            str += ' <div class="card-body" data-reviewnum='+review.reviewnum+' data-mid='+review.mid+' data-text='+review.text+'>';
+                            str += '<hr>';
+                            str += ' <h5 class="card-title">' + review.text + '<span>' +
+                               review.grade+ '</span></h5>';
+                            str += ' <h6 class="card-subtitle mb-2 text-muted" >' + review.nickname + '</h6>';
+                            str += ' <p class="card-text" >' + formatTime(review.regDate) + '</p>';
+                            str += '</div>';
+                        });
+
+                        $('.reviewList').html(str);
+                    });
+                }
+
+                $('.reviewList').on("click", '.card-body', function () {
+
+                    $('.reviewSaveBtn').hide();
+                    $('.removeBtn, .modifyBtn').show();
+
+                    var targetReview = $(this);
+
+                    console.log("div에 세팅한 data="+targetReview.text());
+
+                    reviewnum = targetReview.data('reviewnum');
+
+                    console.log("reviewnum:" + reviewnum);
+                    inputMid.val(targetReview.data("mid"))
+                    console.log("membernum:"+ inputMid.val(targetReview.data("mid")).val())
+
+                    // 이유모르겟음
+                    // inputText.val(targetReview.find(".card-title").clone().children().remove().end().text());
+
+                    inputText.val(targetReview.data("text"))
+                    console.log("text값="+inputText.val(targetReview.data("text")).val())
+                    // console.log("text" + inputText.val(targetReview.find(".card-title").clone().children().remove().end().text()));
+
+                    var grade = targetReview.find('.card-title span').text();
+
+                    console.log("grade" + grade);
+                    $(".starrr a:nth-child(" + grade + ")").trigger('click');
+
+                    $('.reviewModal').modal("show");
+
+                });
+
+                getMovieReviews();
+
+                $('.uploadResult li').click(function () {
+                    var file = $(this).data('file');
+
+                    console.log(file);
+
+
+                    $('.imageModal .modal-body').html("<img style='width: 100%' src='/display?fileName="+file+"&size=1' >")
+                    $('.imageModal').modal('show');
+                });
 
             });
         </script>

@@ -52,4 +52,15 @@ public class MovieController {
         redirectAttributes.addFlashAttribute("msg", mno);
         return "redirect:/movie/list";
     }
+
+    @PostMapping("/modify")
+    public String modify(MovieDTO movieDTO) {
+        log.info("movieDTO :" + movieDTO);
+
+        return "";
+    }
+
+
+
+
 }

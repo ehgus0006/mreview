@@ -45,12 +45,14 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public void modify(ReviewDTO movieReviewDTO) {
+
+        log.info("수정 서비스="+ movieReviewDTO);
         Optional<Review> result = reviewRepository.findById(movieReviewDTO.getReviewnum());
 
         if (result.isPresent()) {
             Review movieReview = result.get();
-            movieReview.changeGrade(movieReview.getGrade());
-            movieReview.changeText(movieReview.getText());
+            movieReview.changeGrade(movieReviewDTO.getGrade());
+            movieReview.changeText(movieReviewDTO.getText());
 
             reviewRepository.save(movieReview);
         }

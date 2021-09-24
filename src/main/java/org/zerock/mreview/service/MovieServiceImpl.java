@@ -7,10 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.zerock.mreview.dto.MovieDTO;
-import org.zerock.mreview.dto.PageRequestDTO;
-import org.zerock.mreview.dto.PageResultDTO;
-import org.zerock.mreview.dto.ReviewDTO;
+import org.zerock.mreview.dto.*;
 import org.zerock.mreview.entity.Movie;
 import org.zerock.mreview.entity.MovieImage;
 import org.zerock.mreview.entity.Review;
@@ -31,6 +28,32 @@ public class MovieServiceImpl implements MovieService {
     private final MovieImageRepository imageRepository;
 
 
+    @Transactional
+    @Override
+    public void modify(MovieDTO movieDTO) {
+
+        Optional<Movie> result = movieRepository.findById(movieDTO.getMno());
+        if (result.isPresent()) {
+            Movie movie = result.get();
+            movie.changeTitle(movieDTO.getTitle());
+
+            movieRepository.save(movie);
+        }
+
+        List<MovieImageDTO> movieImages = movieDTO.getImageDTOList();
+
+        List<MovieImageDTO> movieImageDTOList = movieImages.stream().map(movieImage -> {
+
+            return MovieImageDTO.builder()
+                    .imgName(movieImage.getImgName())
+                    .path(movieImage.getPath())
+                    .uuid(movieImage.getUuid())
+                    .build();
+        }).collect(Collectors.toList());
+
+
+
+    }
 
     @Transactional
     @Override
